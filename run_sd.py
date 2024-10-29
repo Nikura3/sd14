@@ -93,8 +93,12 @@ def make_QBench():
                "A bus and a pizza on the left of a bench and below a bird", #11
                ]
     
+    ids = []
 
-    bbox = [[[2,121,251,460]],#0
+    for i in range(len(prompts)):
+        ids.append(str(i).zfill(3))
+
+    bboxes = [[[2,121,251,460]],#0
             [[2,121,251,460], [274,345,503,496]],#1
             [[2,121,251,460], [274,345,503,496],[344,32,500,187]],#2
             [[2,121,251,460], [274,345,503,496],[344,32,500,187],[58,327,187,403]],#3
@@ -137,10 +141,27 @@ def make_QBench():
                      ]
     data_dict = {
     i: {
+        "id": ids[i],
         "prompt": prompts[i],
-        "bbox": bbox[i],
+        "bboxes": bboxes[i],
         "phrases": phrases[i],
         "token_indices": token_indices[i]
+    }
+    for i in range(len(prompts))
+    }
+    return data_dict
+
+def samples():
+
+    prompts = ["a scene of a busy marketplace in a medieval town",
+               "an illustration of a vibrant city park during peak bloom season",
+               "a serene forest scene with various wildlife present.",
+               "A black dog running on the beach with a white dog wearing a red collar"
+               ]
+    
+    data_dict = {
+    i: {
+        "prompt": prompts[i]
     }
     for i in range(len(prompts))
     }
@@ -160,15 +181,15 @@ def main():
 
     height=512
     width=512
-    seeds = [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]
+    seeds = range(1,17)
 
     #bench=make_tinyHRS()
     bench=make_QBench()
 
     model_name="QBench-SD14"
 
-    for sample_to_generate in range(7,8):
-        output_path = "./results/"+model_name+"/"+ bench[sample_to_generate]['prompt'] + "/"
+    for sample_to_generate in range(0,len(bench)):
+        output_path = "./results/"+model_name+"/"+ bench[sample_to_generate]['id']+'_'+bench[sample_to_generate]['prompt'] + "/"
 
         l=logger.Logger(pathlib.Path(output_path))
 
