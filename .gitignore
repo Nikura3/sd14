@@ -1,2 +1,4 @@
 results/
 scripts/
+utils/__pycache__/
+utils/__pycache__/logger.cpython-310.pyc

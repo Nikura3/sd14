@@ -187,11 +187,16 @@ def main():
     bench=make_QBench()
 
     model_name="QBench-SD14"
+    
+    if (not os.path.isdir("./results/"+model_name)):
+            os.makedirs("./results/"+model_name)
+    
+    #intialize logger
+    l=logger.Logger("./results/"+model_name+"/")
 
     for sample_to_generate in range(0,len(bench)):
+        
         output_path = "./results/"+model_name+"/"+ bench[sample_to_generate]['id']+'_'+bench[sample_to_generate]['prompt'] + "/"
-
-        l=logger.Logger(pathlib.Path(output_path))
 
         if (not os.path.isdir(output_path)):
             os.makedirs(output_path)
@@ -232,13 +237,13 @@ def main():
             image.save(output_path +"/"+ str(seed) + ".jpg")
             gen_images.append(tf.pil_to_tensor(image))
 
-        # log gpu stats
-        l.log_gpu_memory_instance()
-        # save to csv_file
-        l.save_log_to_csv(bench[sample_to_generate]['prompt'])
-
         # save a grid of results across all seeds without bboxes
         tf.to_pil_image(torchvision.utils.make_grid(tensor=gen_images,nrow=4,padding=0)).save(output_path +"/"+ bench[sample_to_generate]['prompt'] + ".png")
-
+    
+    # log gpu stats
+    l.log_gpu_memory_instance()
+    # save to csv_file
+    l.save_log_to_csv(model_name)
+        
 if __name__ == '__main__':
     main()
