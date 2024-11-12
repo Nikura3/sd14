@@ -2,6 +2,7 @@ import pathlib
 import time
 import torch
 import os
+import pandas as pd
 
 from diffusers import StableDiffusionPipeline
 from utils import logger, visual_utils
@@ -151,8 +152,25 @@ def make_QBench():
     }
     return data_dict
 
-def samples():
+def readPromptsCSV(path):
+    df = pd.read_csv(path, dtype={'id': str})
+    conversion_dict={}
+    for i in range(0,len(df)):
+        conversion_dict[df.at[i,'id']] = {
+            'prompt': df.at[i,'prompt'],
+            'obj1': df.at[i,'obj1'],
+            'bbox1':df.at[i,'bbox1'],
+            'obj2': df.at[i,'obj2'],
+            'bbox2':df.at[i,'bbox2'],
+            'obj3': df.at[i,'obj3'],
+            'bbox3':df.at[i,'bbox3'],
+            'obj4': df.at[i,'obj4'],
+            'bbox4':df.at[i,'bbox4'],
+        }
+    
+    return conversion_dict    
 
+def samples():
     prompts = ["a scene of a busy marketplace in a medieval town",
                "an illustration of a vibrant city park during peak bloom season",
                "a serene forest scene with various wildlife present.",
@@ -170,7 +188,7 @@ def samples():
 # Generate an image described by the prompt and
 # insert objects described by text at the region defined by bounding boxes
 def main():
-    pipe = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4",use_safetensors=False ,local_files_only=True)
+    pipe = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4",use_safetensors=False)
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -184,24 +202,29 @@ def main():
     seeds = range(1,17)
 
     #bench=make_tinyHRS()
-    bench=make_QBench()
+    bench=readPromptsCSV(os.path.join("prompts","prompt_collection_bboxes.csv"))
 
-    model_name="QBench-SD14"
+    model_name="PromptCollection-SD14"
     
     if (not os.path.isdir("./results/"+model_name)):
             os.makedirs("./results/"+model_name)
     
     #intialize logger
     l=logger.Logger("./results/"+model_name+"/")
-
-    for sample_to_generate in range(0,len(bench)):
+    
+    # ids to iterate the dict
+    ids = []
+    for i in range(0,len(bench)):
+        ids.append(str(i).zfill(3))
         
-        output_path = "./results/"+model_name+"/"+ bench[sample_to_generate]['id']+'_'+bench[sample_to_generate]['prompt'] + "/"
+    for id in ids:
+        
+        output_path = "./results/"+model_name+"/"+ id +'_'+bench[id]['prompt'] + "/"
 
         if (not os.path.isdir(output_path)):
             os.makedirs(output_path)
 
-        print("Sample number ",sample_to_generate)
+        print("Sample number ",id)
         
         torch.cuda.empty_cache()
 
@@ -220,7 +243,7 @@ def main():
                 g = torch.Generator('cpu').manual_seed(seed)
 
             images = pipe(
-                prompt=bench[sample_to_generate]['prompt'],
+                prompt=bench[id]['prompt'],
                 height=height,
                 width=width,
                 output_type="pil",
@@ -238,7 +261,7 @@ def main():
             gen_images.append(tf.pil_to_tensor(image))
 
         # save a grid of results across all seeds without bboxes
-        tf.to_pil_image(torchvision.utils.make_grid(tensor=gen_images,nrow=4,padding=0)).save(output_path +"/"+ bench[sample_to_generate]['prompt'] + ".png")
+        tf.to_pil_image(torchvision.utils.make_grid(tensor=gen_images,nrow=4,padding=0)).save(output_path +"/"+ bench[id]['prompt'] + ".png")
     
     # log gpu stats
     l.log_gpu_memory_instance()
