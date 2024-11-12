@@ -188,7 +188,7 @@ def samples():
 # Generate an image described by the prompt and
 # insert objects described by text at the region defined by bounding boxes
 def main():
-    pipe = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4",use_safetensors=False)
+    pipe = StableDiffusionPipeline.from_pretrained("CompVis/stable-diffusion-v1-4",use_safetensors=False, safety_checker=None)
 
     if torch.cuda.is_available():
         device = torch.device("cuda")
