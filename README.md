@@ -1,4 +1,4 @@
-# Testing StableDiffusion 1.4 for my master's thesis
+# Testing StableDiffusion 1.4 for my master thesis
 
 This repo uses Stable Diffusion 1.4 for text-to-image generation. It does not include layout guidance or bounding box constraints — images are generated freely based on the prompt.
 
